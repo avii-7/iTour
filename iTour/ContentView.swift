@@ -6,16 +6,50 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct ContentView: View {
+    
+    @Environment(\.modelContext) var modelContext
+    
+    @Query var destinations: [Destination]
+    
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        NavigationStack {
+            List {
+                ForEach(destinations) { destination in
+                    VStack (alignment: .leading) {
+                        Text(destination.name)
+                            .font(.headline)
+                        
+                        Text(destination.date, format: .dateTime)
+                    }
+                }
+            }
+            .navigationTitle("iTour")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        addSamples()
+                    } label: {
+                        Image(systemName: "plus")
+                    }
+                }
+            }
         }
-        .padding()
+    }
+}
+
+extension ContentView {
+    
+    private func addSamples() {
+        let rome = Destination(name: "Rome")
+        let florence = Destination(name: "Florence")
+        let naples = Destination(name: "naples")
+        
+        for item in [rome, florence, naples] {
+            modelContext.insert(item)
+        }
     }
 }
 
