@@ -10,27 +10,33 @@ import SwiftData
 
 struct ContentView: View {
     
+    @State private var path = [Destination]()
+    
     @Environment(\.modelContext) var modelContext
     
     @Query var destinations: [Destination]
     
     var body: some View {
-        NavigationStack {
+        NavigationStack (path: $path) {
             List {
                 ForEach(destinations) { destination in
-                    VStack (alignment: .leading) {
-                        Text(destination.name)
-                            .font(.headline)
-                        
-                        Text(destination.date, format: .dateTime)
+                    NavigationLink(value: destination) {
+                        VStack (alignment: .leading) {
+                            Text(destination.name)
+                                .font(.headline)
+                            
+                            Text(destination.date, format: .dateTime)
+                        }
                     }
                 }
+                .onDelete(perform: deleteDestinations)
             }
             .navigationTitle("iTour")
+            .navigationDestination(for: Destination.self, destination: EditDestinationView.init)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
-                        addSamples()
+                        addDestination()
                     } label: {
                         Image(systemName: "plus")
                     }
@@ -42,14 +48,14 @@ struct ContentView: View {
 
 extension ContentView {
     
-    private func addSamples() {
-        let rome = Destination(name: "Rome")
-        let florence = Destination(name: "Florence")
-        let naples = Destination(name: "naples")
-        
-        for item in [rome, florence, naples] {
-            modelContext.insert(item)
-        }
+    private func addDestination() {
+        let destination = Destination()
+        modelContext.insert(destination)
+        path = [destination]
+    }
+    
+    private func deleteDestinations(_ indexSet: IndexSet) {
+        indexSet.forEach { modelContext.delete(destinations[$0]) }
     }
 }
 
