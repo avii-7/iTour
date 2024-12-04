@@ -10,38 +10,40 @@ import SwiftData
 
 struct ContentView: View {
     
+    @State private var sortOrder = SortDescriptor(\Destination.name)
+    
     @State private var path = [Destination]()
     
     @Environment(\.modelContext) var modelContext
     
-    @Query var destinations: [Destination]
-    
     var body: some View {
         NavigationStack (path: $path) {
-            List {
-                ForEach(destinations) { destination in
-                    NavigationLink(value: destination) {
-                        VStack (alignment: .leading) {
-                            Text(destination.name)
-                                .font(.headline)
-                            
-                            Text(destination.date, format: .dateTime)
+            DestinationListingView(sort: sortOrder)
+                .navigationTitle("iTour")
+                .navigationDestination(for: Destination.self, destination: EditDestinationView.init)
+                .toolbar {
+                    ToolbarItemGroup(placement: .topBarTrailing) {
+                        Button {
+                            addDestination()
+                        } label: {
+                            Image(systemName: "plus")
+                        }
+                        
+                        Menu("Sort", systemImage: "arrow.up.arrow.down") {
+                            Picker("Sort", selection: $sortOrder) {
+                                Text("Name")
+                                    .tag(SortDescriptor(\Destination.name))
+                                
+                                Text("Priority")
+                                    .tag(SortDescriptor(\Destination.priority, order: .reverse))
+                                
+                                Text("Date")
+                                    .tag(SortDescriptor(\Destination.date))
+                            }
+                            .pickerStyle(.inline)
                         }
                     }
                 }
-                .onDelete(perform: deleteDestinations)
-            }
-            .navigationTitle("iTour")
-            .navigationDestination(for: Destination.self, destination: EditDestinationView.init)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        addDestination()
-                    } label: {
-                        Image(systemName: "plus")
-                    }
-                }
-            }
         }
     }
 }
@@ -54,11 +56,10 @@ extension ContentView {
         path = [destination]
     }
     
-    private func deleteDestinations(_ indexSet: IndexSet) {
-        indexSet.forEach { modelContext.delete(destinations[$0]) }
-    }
+    
 }
 
 #Preview {
     ContentView()
+        .modelContainer(for: Destination.self, inMemory: true)
 }
